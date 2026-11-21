@@ -4770,18 +4770,18 @@ bool CvUnit::canEnterTerrain(const CvPlot& enterPlot, int iMoveFlags) const
 	}
 	else //passable. need to check for negative promotions / traits and their exceptions
 	{
-		//special handling for ocean
-		if (enterPlot.isDeepWater() && enterPlot.getFeatureType()==NO_FEATURE)
+		if(enterPlot.getFeatureType() != NO_FEATURE && isFeatureImpassable(enterPlot.getFeatureType()))
+		{
+			return false;
+		}
+		//special handling for ocean, also when there is a passable feature on it (#9973)
+		else if (enterPlot.isDeepWater())
 		{
 			//true naval units can enter ocean plots if they don't stay there. embarked units need the tech in any case
 			if ( (iMoveFlags&CvUnit::MOVEFLAG_DESTINATION) || enterPlot.needsEmbarkation(this))
 			{
 				return CanStayInOcean();
 			}
-		}
-		else if(enterPlot.getFeatureType() != NO_FEATURE && isFeatureImpassable(enterPlot.getFeatureType()))
-		{
-			return false;
 		}
 		else if(enterPlot.getTerrainType() != NO_TERRAIN && isTerrainImpassable(enterPlot.getTerrainType()))
 		{

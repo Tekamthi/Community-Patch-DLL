@@ -14938,7 +14938,8 @@ void CvPlot::updateImpassable(TeamTypes eTeam)
 	//if it's passable, check for blocking terrain/features
 	if(eTerrain != NO_TERRAIN)
 	{
-		if(eFeature == NO_FEATURE)
+		//a feature on a mountain does not decide passability by itself, the mountain is gated like a bare one (#9973)
+		if(eFeature == NO_FEATURE || isMountain())
 		{
 			CvTerrainInfo* pkTerrainInfo = GC.getTerrainInfo(eTerrain);
 			if(pkTerrainInfo)
@@ -14998,6 +14999,29 @@ void CvPlot::updateImpassable(TeamTypes eTeam)
 						}
 					}
 				}	
+			}
+		}
+
+		//... except that a feature with a passable tech opens the mountain for teams with that tech
+		if(eFeature != NO_FEATURE && isMountain())
+		{
+			CvFeatureInfo* pkMountainFeature = GC.getFeatureInfo(eFeature);
+			TechTypes ePassableTech = pkMountainFeature ? (TechTypes)pkMountainFeature->GetPrereqPassable() : NO_TECH;
+			if(ePassableTech != NO_TECH)
+			{
+				if (eTeam != NO_TEAM)
+				{
+					if (GET_TEAM(eTeam).GetTeamTechs()->HasTech(ePassableTech))
+						SetTeamImpassable(eTeam, false);
+				}
+				else
+				{
+					for (size_t i=0; i<MAX_TEAMS; i++)
+					{
+						if (GET_TEAM((TeamTypes)i).GetTeamTechs()->HasTech(ePassableTech))
+							SetTeamImpassable((TeamTypes)i, false);
+					}
+				}
 			}
 		}
 	}
